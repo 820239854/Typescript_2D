@@ -1,6 +1,6 @@
 import { mat2d, vec2, Inset } from "../math2d";
 import { CanvasMouseEvent, CanvasKeyBoardEvent } from "../application";
-import { Rect, Circle, Grid, Ellipse, Line, ConvexPolygon, Scale9Grid, BezierPath } from "./shapes";
+import { Rect, Circle, Grid, Ellipse, Line, ConvexPolygon, Scale9Grid, Bone, BezierPath, EndClipShape } from "./shapes";
 import { Sprite2D } from "./sprite2d";
 
 export enum ERenderType {
@@ -136,8 +136,20 @@ export class SpriteFactory {
         return new Line(len, t);
     }
 
+    public static createBone(len: number = 10, t: number = 0): IShape {
+        return new Bone(len, t);
+    }
+
     public static createBezierPath(points: vec2[], isCubic: boolean = false): IShape {
         return new BezierPath(points, isCubic);
+    }
+
+    public static endCLipShape: IShape = new EndClipShape();
+
+    public static createClipSprite(): ISprite {
+        let spr: ISprite = new Sprite2D(SpriteFactory.endCLipShape, 'clip');
+        spr.renderType = ERenderType.CLIP;
+        return spr;
     }
 
     public static createSprite(shape: IShape, name: string = ''): ISprite {

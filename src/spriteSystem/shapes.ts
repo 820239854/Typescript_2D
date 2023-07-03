@@ -310,6 +310,23 @@ export class Line implements IShape {
     }
 }
 
+export class Bone extends Line {
+
+    public get type(): string { return "Bone"; }
+
+    public draw(transformable: ITransformable, state: IRenderState, context: CanvasRenderingContext2D): void {
+        super.draw(transformable, state, context);
+
+        let mat: mat2d = transformable.getWorldMatrix();
+        context.save();
+        context.setTransform(1, 0, 0, 1, mat.values[4], mat.values[5]);
+        context.beginPath();
+        context.fillStyle = 'blue';
+        context.arc(this.start.x, this.start.y, 5, 0, Math.PI * 2);
+        context.fill();
+        context.restore();
+    }
+}
 
 export class Scale9Grid extends Rect {
 
@@ -503,3 +520,35 @@ export class Scale9Grid extends Rect {
         }
     }
 }
+
+export class EndClipShape implements IShape {
+    public data: any;
+    public hitTest(localPt: vec2, transform: ITransformable): boolean {
+        return false;
+    }
+
+    public beginDraw(transformable: ITransformable, state: IRenderState, context: CanvasRenderingContext2D): void {
+
+    }
+
+    public draw(transformable: ITransformable, state: IRenderState, context: CanvasRenderingContext2D): void {
+
+    }
+
+    public endDraw(transformable: ITransformable, state: IRenderState, context: CanvasRenderingContext2D): void {
+        context.restore();
+    }
+
+    public get type(): string {
+        return "EndCLipShape";
+    }
+}
+
+
+
+/*
+export class Calendar extends BaseShape2D {
+
+}
+*/
+

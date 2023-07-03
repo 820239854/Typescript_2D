@@ -1,5 +1,7 @@
 import { mat2d, Transform2D, vec2 } from "../math2d"
 import { ISprite, MouseEventHandler, KeyboardEventHandler, UpdateEventHandler, EOrder, IShape, ERenderType, ITransformable, ISpriteContainer, RenderEventHandler } from "./interface"
+import { TreeNode } from "../treeNode";
+import { SpriteNode } from "./sprite2dHierarchicalSystem";
 
 export class Sprite2D implements ISprite {
     public showCoordSystem: boolean = false;
@@ -66,8 +68,29 @@ export class Sprite2D implements ISprite {
         return this.transform.scale.y;
     }
 
+
     public getWorldMatrix(): mat2d {
-        return this.transform.toMatrix();
+        if (this.owner instanceof SpriteNode) {
+            let arr: TreeNode<ISprite>[] = [];
+            let curr: TreeNode<ISprite> | undefined = this.owner as SpriteNode;
+            while (curr !== undefined) {
+                arr.push(curr);
+                curr = curr.parent;
+            }
+
+            let out: mat2d = mat2d.create();
+            let currMat: mat2d;
+            for (let i: number = arr.length - 1; i >= 0; i--) {
+                curr = arr[i];
+                if (curr.data) {
+                    currMat = (curr.data as Sprite2D).transform.toMatrix();
+                    mat2d.multiply(out, currMat, out);
+                }
+            }
+            return out;
+        } else {
+            return this.transform.toMatrix();
+        }
     }
 
     public getLocalMatrix(): mat2d {
