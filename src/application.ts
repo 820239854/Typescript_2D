@@ -1,5 +1,4 @@
 import { vec2 } from "./math2d";
-
 export enum EInputEventType {
     MOUSEEVENT,
     MOUSEDOWN,
@@ -17,7 +16,6 @@ export class CanvasInputEvent {
     public ctrlKey: boolean;
     public shiftKey: boolean;
     public type: EInputEventType;
-
     public constructor(type: EInputEventType, altKey: boolean = false, ctrlKey: boolean = false, shiftKey: boolean = false) {
         this.altKey = altKey;
         this.ctrlKey = ctrlKey;
@@ -75,11 +73,14 @@ export class CanvasKeyBoardEvent extends CanvasInputEvent {
 }
 
 export class Application implements EventListenerObject {
-    public canvas: HTMLCanvasElement;
 
     public timers: Timer[] = [];
+
     private _timeId: number = -1;
+
     private _fps: number = 0;
+
+    public canvas: HTMLCanvasElement;
 
     public isSupportMouseMove: boolean;
     protected _isMouseDown: boolean;
@@ -116,7 +117,7 @@ export class Application implements EventListenerObject {
             this._lastTime = -1;
             this._startTime = -1;
             this._requestId = requestAnimationFrame((msec: number): void => {
-                this.step(msec)
+                this.step(msec);
             });
         }
     }
@@ -134,15 +135,14 @@ export class Application implements EventListenerObject {
         this._handleTimers(intervalSec);
         this.update(elapsedMsec, intervalSec);
         this.render();
-
-        requestAnimationFrame(this.step.bind(this));
+        requestAnimationFrame((elapsedMsec: number): void => {
+            this.step(elapsedMsec);
+        });
     }
 
     public stop(): void {
-        console.log("stop");
         if (this._start) {
-            window.cancelAnimationFrame(this._requestId);
-            this._requestId = -1;
+            cancelAnimationFrame(this._requestId);
             this._lastTime = -1;
             this._startTime = -1;
             this._start = false;
@@ -151,7 +151,6 @@ export class Application implements EventListenerObject {
 
     public update(elapsedMsec: number, intervalSec: number): void { }
     public render(): void { }
-
     public handleEvent(evt: Event): void {
         switch (evt.type) {
             case "mousedown":
