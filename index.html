@@ -33,14 +33,18 @@
             }
         });
         System
-            .import('doom3TokenizerTest.ts')
+            .import('applicationTest.ts')
             .then(null, console.error.bind(console));
     </script>
 
 </head>
 
 <body id="body">
-    <canvas id="canvas" width="800" height="600"></canvas>
+    <div>
+        <button id="start">start</button>
+        <button id="stop">stop</button>
+    </div>
+    <canvas id="canvas" width="300" height="300"></canvas>
 </body>
 
 </html>
