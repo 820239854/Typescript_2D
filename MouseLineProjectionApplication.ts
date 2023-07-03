@@ -114,6 +114,7 @@ class TestApplication extends Canvas2DApplication {
 
     public constructor(canvas: HTMLCanvasElement) {
         super(canvas);
+
         this.isSupportMouseMove = true;
         let stack: RenderStateStack = new RenderStateStack();
         stack.printCurrentStateInfo();
@@ -123,6 +124,9 @@ class TestApplication extends Canvas2DApplication {
         stack.printCurrentStateInfo();
         stack.restore();
         stack.printCurrentStateInfo();
+
+        // 添加计时器，以每秒30帧的速度运行
+        // 使用bind方法绑定回调函数
         // this . addTimer ( this . timeCallback . bind ( this ) , 0.033 ) ;
         // this . loadImage ( ) ;
     }
@@ -130,37 +134,32 @@ class TestApplication extends Canvas2DApplication {
     protected dispatchMouseMove(evt: CanvasMouseEvent): void {
         this._mouseX = evt.canvasPosition.x;
         this._mouseY = evt.canvasPosition.y;
+
+        this._hitted = Math2D.projectPointOnLineSegment(
+            vec2.create(evt.canvasPosition.x, evt.canvasPosition.y),
+            this.lineStart, this.lineEnd, this.closePt);
     }
 
     protected dispatchMouseUp(evt: CanvasMouseEvent): void {
+
     }
 
     protected dispatchKeyPress(evt: CanvasKeyBoardEvent): void {
+
     }
 
     public update(elapsedMsec: number, intervalSec: number): void {
-        this._rotationMoon += this._rotationMoonSpeed * intervalSec;
-        this._rotationSun += this._rotationSunSpeed * intervalSec;
-        this._revolution += this._revolutionSpeed * intervalSec;
+
     }
 
     public render(): void {
         if (this.context2D !== null) {
             this.context2D.clearRect(0, 0, this.canvas.width, this.canvas.height);
             this.strokeGrid();
-            this.drawCanvasCoordCenter();
-            this.draw4Quadrant();
+            //this.drawCanvasCoordCenter();
+            //this.draw4Quadrant();
 
-            // 请自行切换下面测试函数
-            /*****************第5章第1节Demo********************* */
-            //this . doTransform0 ( ) ;
-            //this . doTransform ( 30 , true ) ;
-            //this . doTransform ( 30 , false ) ; 
-
-            //this . testFillLocalRectWithTitle ( ) ;
-            //this . doLocalTransform ( ) ;
-            this.testFillLocalRectWithTitleUV();
-            this.rotationAndRevolutionSimulation();
+            this.drawMouseLineProjection();
 
             this.drawCoordInfo(
                 '[' + this._mouseX + ',' + this._mouseY + "]",
@@ -268,12 +267,12 @@ class TestApplication extends Canvas2DApplication {
     }
 
     /*
-    public start ( ) : void {
+   public start ( ) : void {
        this . addTimer ( (id : number , data : any) : void => {
            this . timeCallback ( id , data ) ;
        } , 0.05) ;
        super . start ( ) ;
-    }*/
+   }*/
 
     public static Colors: string[] = [
         'aqua',    //浅绿色
@@ -973,6 +972,10 @@ class TestApplication extends Canvas2DApplication {
         }
     }
 
+    /*******************************************第4章全部结束************************************************ */
+
+    /*******************************************第5章坐标系变换代码************************************************ */
+
     /*******************************************5.1节代码************************************************ */
     public drawCanvasCoordCenter(): void {
         if (this.context2D === null) {
@@ -1273,10 +1276,10 @@ class TestApplication extends Canvas2DApplication {
         /*
         this . context2D . rotate ( Math2D . toRadian ( 70 ) ) ;
         this . fillLocalRectWithTitle ( width , height , '4. 继续旋转70度' ) ;
-    
+
         this . context2D . translate ( 0 , 100 ) ;
         this . fillLocalRectWithTitle ( width , height , '5. y轴局部平移100像素' ) ;
-    
+
         this . context2D .scale ( 1.5 , 1.0 ) ;
         this . fillLocalRectWithTitle (width , height , '6. x轴局部放大1.5倍' ) ;
         */
@@ -1365,8 +1368,6 @@ class TestApplication extends Canvas2DApplication {
         this.context2D.restore();
         this.context2D.restore();
     }
-
-
     /*******************************************5.2节代码************************************************ */
     public draw4Quadrant(): void {
 
@@ -1382,6 +1383,187 @@ class TestApplication extends Canvas2DApplication {
         this.fillText("第四象限", this.canvas.width, 0, 'rgba( 0 , 0 , 255 , 0.5 )', 'right', 'top', "20px sans-serif");
 
         this.context2D.restore();
+    }
+    /*******************************************第6章代码************************************************ */
+
+    /*******************************************6.1代码************************************************ */
+    public drawVec(len: number, arrowLen: number = 10, beginText: string = '', endText = '', lineWidth: number = 1, isLineDash: boolean = false, showInfo: boolean = true, alpha: boolean = false): void {
+        if (this.context2D === null) {
+            return;
+        }
+
+        if (len < 0) {
+            arrowLen = - arrowLen;
+        }
+
+        this.context2D.save();
+        this.context2D.lineWidth = lineWidth;
+
+        if (isLineDash) {
+            this.context2D.setLineDash([2, 2]);
+        }
+
+        if (lineWidth > 1) {
+            this.fillCircle(0, 0, 5);
+        } else {
+            this.fillCircle(0, 0, 3);
+        }
+
+        this.context2D.save();
+        if (alpha === true) {
+            this.context2D.strokeStyle = 'rgba( 0 , 0 , 0 , 0.3 )';
+        }
+
+        this.strokeLine(0, 0, len, 0);
+
+        this.context2D.save();
+        this.strokeLine(len, 0, len - arrowLen, arrowLen);
+        this.context2D.restore();
+
+        this.context2D.save();
+        this.strokeLine(len, 0, len - arrowLen, - arrowLen);
+        this.context2D.restore();
+
+        this.context2D.restore();
+
+        let font: FontType = "15px sans-serif";
+
+
+        if (beginText != undefined && beginText.length != 0) {
+            if (len > 0) {
+                this.fillText(beginText, 0, 0, 'black', 'right', 'bottom', font);
+            } else {
+                this.fillText(beginText, 0, 0, 'black', 'left', 'bottom', font);
+            }
+        }
+
+        len = parseFloat(len.toFixed(2));
+
+        if (beginText != undefined && endText.length != 0) {
+            if (len > 0) {
+                this.fillText(endText, len, 0, 'black', 'left', 'bottom', font);
+            } else {
+                this.fillText(endText, len, 0, 'black', 'right', 'bottom', font);
+            }
+        }
+
+        if (showInfo === true) {
+            this.fillText(Math.abs(len).toString(), len * 0.5, 0, 'black', 'center', 'bottom', font);
+        }
+
+        this.context2D.restore();
+    }
+
+    public drawVecFromLine(start: vec2, end: vec2, arrowLen: number = 10, beginText: string = '', endText = '', lineWidth: number = 1, isLineDash: boolean = false, showInfo: boolean = false, alpha: boolean = false): number {
+        let angle: number = vec2.getOrientation(start, end, true);
+        if (this.context2D !== null) {
+            let diff: vec2 = vec2.difference(end, start);
+            let len: number = diff.length;
+            this.context2D.save();
+            this.context2D.translate(start.x, start.y);
+            this.context2D.rotate(angle);
+            this.drawVec(len, arrowLen, beginText, endText, lineWidth, isLineDash, showInfo, alpha);
+            this.context2D.restore();
+        }
+        return angle;
+    }
+
+    public drawTriangle(x0: number, y0: number, x1: number, y1: number, x2: number, y2: number, ptX: number = x2, ptY: number = y2, drawSubTriangle: boolean = false, stroke: boolean = true): void {
+
+        if (this.context2D === null) {
+            return;
+        }
+
+        this.context2D.save();
+        this.context2D.lineWidth = 3;
+        this.context2D.strokeStyle = 'rgba( 0 , 0 , 0 , 0.5 )';
+        this.context2D.beginPath();
+        this.context2D.moveTo(x0, y0);
+        this.context2D.lineTo(x1, y1);
+        this.context2D.lineTo(x2, y2);
+        this.context2D.closePath();
+        if (stroke) {
+            this.context2D.stroke();
+        } else {
+            this.context2D.fill();
+        }
+
+        if (drawSubTriangle === true) {
+            this.context2D.lineWidth = 2;
+            this.context2D.setLineDash([3, 3]);
+            this.strokeLine(x0, y0, ptX, ptY);
+            this.strokeLine(x1, y1, ptX, ptY);
+            this.strokeLine(x2, y2, ptX, ptY);
+        }
+
+        this.fillCircle(ptX, ptY, 5);
+        this.context2D.restore();
+    }
+
+    public drawPolygon(points: vec2[], ptX: number, ptY: number, drawSubTriangle: boolean = false): void {
+        if (this.context2D === null) return;
+        this.context2D.save();
+        this.context2D.strokeStyle = 'rgba( 0 , 0 , 0 , 0.5 )';
+        this.context2D.lineWidth = 3;
+        this.context2D.translate(ptX, ptY);
+        this.context2D.beginPath();
+        this.context2D.moveTo(points[0].x, points[0].y);
+        for (let i = 1; i < points.length; i++) {
+            this.context2D.lineTo(points[i].x, points[i].y);
+        }
+        this.context2D.closePath();
+        this.context2D.stroke();
+        if (drawSubTriangle === true) {
+            this.context2D.lineWidth = 2;
+            this.context2D.setLineDash([3, 3]);
+            for (let i: number = 1; i < points.length - 1; i++) {
+                this.strokeLine(points[0].x, points[0].y, points[i].x, points[i].y);
+            }
+        }
+
+        this.fillCircle(points[0].x, points[0].y, 5, 'red');
+        this.context2D.restore();
+    }
+
+    /*******************************************6.2代码************************************************ */
+    public lineStart: vec2 = vec2.create(150, 150);
+    public lineEnd: vec2 = vec2.create(400, 300);
+    public closePt: vec2 = vec2.create();
+    private _hitted: boolean = false;
+
+    public drawMouseLineProjection(): void {
+        if (this.context2D != null) {
+            if (this._hitted === false) {
+                this.drawVecFromLine(this.lineStart, this.lineEnd, 10, this.lineStart.toString(), this.lineEnd.toString(), 1, false, true);
+            } else {
+                let angle: number = 0;
+                let mousePt: vec2 = vec2.create(this._mouseX, this._mouseY);
+
+                this.context2D.save();
+                angle = this.drawVecFromLine(this.lineStart, this.lineEnd, 10, this.lineStart.toString(), this.lineEnd.toString(), 3, false, true);
+                this.fillCircle(this.closePt.x, this.closePt.y, 5);
+                this.drawVecFromLine(this.lineStart, mousePt, 10, '', '', 1, true, true, false);
+                this.drawVecFromLine(mousePt, this.closePt, 10, '', '', 1, true, true, false);
+                this.context2D.restore();
+
+                this.context2D.save();
+                this.context2D.translate(this.closePt.x, this.closePt.y);
+                this.context2D.rotate(angle);
+                this.drawCoordInfo(
+                    '[' + (this.closePt.x).toFixed(2) + '  ,  ' + (this.closePt.y).toFixed(2) + " ]",
+                    0,
+                    0
+                );
+                this.context2D.restore();
+                angle = vec2.getAngle(vec2.difference(this.lineEnd, this.lineStart), vec2.difference(mousePt, this.lineStart), false);
+                this.drawCoordInfo(
+                    angle.toFixed(2),
+                    this.lineStart.x + 10,
+                    this.lineStart.y + 10
+                );
+
+            }
+        }
     }
 }
 
